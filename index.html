@@ -5,21 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Analisa Saham Indonesia</title>
     <style>
-        /* Warna dan tampilan dasar */
         body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 900px;
             margin: 0 auto;
             padding: 20px;
-            background: #f0f2f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         .container {
             background: white;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
-        h1 { color: #1a73e8; text-align: center; }
+        h1 { 
+            color: #1a73e8; 
+            text-align: center; 
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
         .input-group {
             display: flex;
             gap: 10px;
@@ -30,88 +40,192 @@
             padding: 15px;
             font-size: 18px;
             border: 2px solid #ddd;
-            border-radius: 8px;
+            border-radius: 10px;
             text-transform: uppercase;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            border-color: #1a73e8;
+            outline: none;
         }
         button {
             padding: 15px 30px;
             font-size: 18px;
-            background: #1a73e8;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
         }
-        button:hover { background: #1557b0; }
-        .loading { display: none; text-align: center; color: #666; }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .loading { 
+            display: none; 
+            text-align: center; 
+            color: #666;
+            padding: 20px;
+        }
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
         .result { display: none; margin-top: 20px; }
+        .info-badge {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
         .card {
             background: #f8f9fa;
             padding: 15px;
             margin: 10px 0;
-            border-radius: 10px;
-            border-left: 4px solid #1a73e8;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-label {
+            font-weight: 600;
+            color: #444;
+        }
+        .card-value {
+            font-weight: bold;
+            color: #1a73e8;
         }
         .score-box {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             border-radius: 15px;
             margin: 20px 0;
+            transition: all 0.3s;
         }
-        .score-bagus { background: #d4edda; color: #155724; }
-        .score-cukup { background: #fff3cd; color: #856404; }
-        .score-buruk { background: #f8d7da; color: #721c24; }
+        .score-bagus { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); color: #155724; }
+        .score-cukup { background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); color: #856404; }
+        .score-buruk { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); color: #721c24; }
         .rekomendasi {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             text-align: center;
+            padding: 18px;
+            border-radius: 12px;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .beli { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; }
+        .tahan { background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%); color: black; }
+        .jual { background: linear-gradient(135deg, #dc3545 0%, #f44336 100%); color: white; }
+        .red-flags {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+            color: #856404;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #888;
+            font-size: 12px;
+        }
+        .saham-list {
+            background: #f0f4ff;
             padding: 15px;
             border-radius: 10px;
             margin-top: 15px;
+            font-size: 13px;
+            color: #555;
         }
-        .beli { background: #28a745; color: white; }
-        .tahan { background: #ffc107; color: black; }
-        .jual { background: #dc3545; color: white; }
+        .saham-list strong { color: #1a73e8; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>📊 Analisa Saham Indonesia</h1>
-        <p style="text-align: center; color: #666;">Masukkan kode saham untuk analisis cepat</p>
+        <p class="subtitle">Data harga real-time dari Yahoo Finance + Fundamental Database</p>
         
         <div class="input-group">
             <input type="text" id="kodeSaham" placeholder="Contoh: BBRI" maxlength="4">
             <button onclick="analisaSaham()">🔍 Analisa</button>
         </div>
 
-        <div class="loading" id="loading">⏳ Sedang mengambil data...</div>
+        <div class="loading" id="loading">⏳ Sedang mengambil data</div>
 
         <div class="result" id="hasil">
+            <div class="info-badge" id="sektor">-</div>
             <h2>📈 Hasil Analisis <span id="namaSaham"></span></h2>
             
             <div class="card">
-                <strong>💰 Harga Saat Ini:</strong> <span id="harga"></span>
+                <span class="card-label">💰 Harga Saat Ini</span>
+                <span class="card-value" id="harga">-</span>
             </div>
             <div class="card">
-                <strong>📊 PER (Price to Earnings Ratio):</strong> <span id="per"></span>
+                <span class="card-label">📊 PER (Price to Earnings)</span>
+                <span class="card-value" id="per">-</span>
             </div>
             <div class="card">
-                <strong>📘 PBV (Price to Book Value):</strong> <span id="pbv"></span>
+                <span class="card-label">📘 PBV (Price to Book Value)</span>
+                <span class="card-value" id="pbv">-</span>
             </div>
             <div class="card">
-                <strong>📈 ROE (Return on Equity):</strong> <span id="roe"></span>
+                <span class="card-label">📈 ROE (Return on Equity)</span>
+                <span class="card-value" id="roe">-</span>
             </div>
             <div class="card">
-                <strong>💵 EPS (Earnings Per Share):</strong> <span id="eps"></span>
+                <span class="card-label">💵 EPS (Earnings Per Share)</span>
+                <span class="card-value" id="eps">-</span>
+            </div>
+            <div class="card">
+                <span class="card-label">🏢 Market Cap</span>
+                <span class="card-value" id="marketCap">-</span>
+            </div>
+            <div class="card">
+                <span class="card-label">🎁 Dividend Yield</span>
+                <span class="card-value" id="dividendYield">-</span>
+            </div>
+            <div class="card">
+                <span class="card-label">⚖️ Debt/Equity</span>
+                <span class="card-value" id="debtEquity">-</span>
+            </div>
+            <div class="card">
+                <span class="card-label">💧 Current Ratio</span>
+                <span class="card-value" id="currentRatio">-</span>
             </div>
 
             <div class="score-box" id="scoreBox">
                 <h3>⭐ Skor Fundamental</h3>
-                <div style="font-size: 48px;" id="skorAngka">0</div>
+                <div style="font-size: 56px; font-weight: bold;" id="skorAngka">0</div>
                 <div id="skorKategori">-</div>
             </div>
 
             <div class="rekomendasi" id="rekomendasi">-</div>
+            
+            <div class="red-flags" id="redFlags"></div>
+        </div>
+
+        <div class="saham-list">
+            <strong>💡 Saham yang tersedia di database:</strong><br>
+            BBRI, BBCA, BMRI, BBNI, BRIS, TLKM, EXCL, ISAT, ASII, IMAS, UNVR, INDF, ICBP, MYOR, GGRM, HMSP, MBTO, PTBA, ADRO, ITMG, ANTM, TINS, PGAS, ESSA, PWON, SMRA, CTRA, BSDE, APLN, KLBF, SIDO, KAEF, PEHA, JSMR, CMNP, META, AALI, LSIP, SMAR, BELI, DOOH, NFCX, MNCN, SCMA, EMTK, BRPT, TPIA, INKP, SPMA, SMDR, IPCM, WSKT, WIKA, ADHI, PTPP, ASRI, MREI, ACES, ERAA, LPPF, MAPI, ARTO, BBHI, CPIN, MAIN, JPFA, SIPD, RAJA, BORN, TAMU, TRAM, GOLD, MDKA, AMMN, BUMI, HRUM, DOID, SMGR, INTP, SMBR, AMRT, MPPA, RALS, HEAL, MIKA, SILO, PRDA, DVLA, INAF, MERK, TBIG, TOWR, BALI, BOGA, FAST, PZZA, MAPB, FILM, ZONE, DCII, EDGE, KREN, LUCK, MTDL, BIRD, TAXI, WEHA
+        </div>
+
+        <div class="footer">
+            ⚠️ Disclaimer: Ini hanya untuk edukasi, bukan saran investasi.<br>
+            Data fundamental bersifat historis/estimasi. Selalu lakukan riset sendiri.
         </div>
     </div>
 
