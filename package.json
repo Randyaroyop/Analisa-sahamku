@@ -1,0 +1,9 @@
+{
+  "name": "analisa-sahamku",
+  "version": "1.0.0",
+  "description": "Aplikasi analisis saham Indonesia sederhana",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
