@@ -2,8 +2,6 @@
 // KONFIGURASI API (TANPA API KEY - GRATIS!)
 // ============================================
 
-// Yahoo Finance API (gratis, tidak perlu key)
-const YAHOO_API = "https://query1.finance.yahoo.com/v8/finance/chart/";
 const YAHOO_QUOTE = "https://query1.finance.yahoo.com/v7/finance/quote";
 
 // ============================================
@@ -185,10 +183,8 @@ async function analisaSaham() {
         // AMBIL DATA HARGA REAL-TIME DARI YAHOO FINANCE
         // ========================================
         
-        // Yahoo Finance pakai ticker dengan .JK (contoh: BBRI.JK)
         const ticker = kode + ".JK";
         
-        // Coba ambil data dari Yahoo Finance
         let harga = 0;
         let per = 0;
         let pbv = 0;
@@ -197,8 +193,9 @@ async function analisaSaham() {
         let marketCap = 0;
         let dividendYield = 0;
         let namaYahoo = "";
+        let yahooSuccess = false;
         
-                try {
+        try {
             // Gunakan CORS proxy
             const proxyUrl = "https://api.allorigins.win/get?url=";
             const yahooUrl = encodeURIComponent(
@@ -209,46 +206,28 @@ async function analisaSaham() {
             
             if (quoteResponse.ok) {
                 const proxyData = await quoteResponse.json();
-                const quoteData = JSON.parse(proxyData.contents);
-                console.log('Yahoo Quote (via proxy):', quoteData);
                 
-                if (quoteData.quoteResponse && quoteData.quoteResponse.result && quoteData.quoteResponse.result.length > 0) {
-                    const result = quoteData.quoteResponse.result[0];
+                if (proxyData.contents) {
+                    const quoteData = JSON.parse(proxyData.contents);
+                    console.log('Yahoo Quote (via proxy):', quoteData);
                     
-                    harga = result.regularMarketPrice || 0;
-                    change = result.regularMarketChange || 0;
-                    changePercent = result.regularMarketChangePercent || 0;
-                    per = result.trailingPE || 0;
-                    pbv = result.priceToBook || 0;
-                    marketCap = result.marketCap || 0;
-                    dividendYield = result.dividendYield || 0;
-                    namaYahoo = result.longName || result.shortName || kode;
+                    if (quoteData.quoteResponse && quoteData.quoteResponse.result && quoteData.quoteResponse.result.length > 0) {
+                        const result = quoteData.quoteResponse.result[0];
+                        
+                        harga = result.regularMarketPrice || 0;
+                        change = result.regularMarketChange || 0;
+                        changePercent = result.regularMarketChangePercent || 0;
+                        per = result.trailingPE || 0;
+                        pbv = result.priceToBook || 0;
+                        marketCap = result.marketCap || 0;
+                        dividendYield = result.dividendYield || 0;
+                        namaYahoo = result.longName || result.shortName || "";
+                        yahooSuccess = true;
+                    }
                 }
             }
         } catch (e) {
-            console.log('Yahoo Finance error:', e);
-        }
-const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
-            
-            if (quoteResponse.ok) {
-                const quoteData = await quoteResponse.json();
-                console.log('Yahoo Quote:', quoteData);
-                
-                if (quoteData.quoteResponse && quoteData.quoteResponse.result && quoteData.quoteResponse.result.length > 0) {
-                    const result = quoteData.quoteResponse.result[0];
-                    
-                    harga = result.regularMarketPrice || 0;
-                    change = result.regularMarketChange || 0;
-                    changePercent = result.regularMarketChangePercent || 0;
-                    per = result.trailingPE || 0;
-                    pbv = result.priceToBook || 0;
-                    marketCap = result.marketCap || 0;
-                    dividendYield = result.dividendYield || 0;
-                    namaYahoo = result.longName || result.shortName || kode;
-                }
-            }
-        } catch (e) {
-            console.log('Yahoo Finance error:', e);
+            console.log('Yahoo Finance error (akan pakai data manual):', e);
         }
         
         // ========================================
@@ -257,8 +236,8 @@ const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
         
         const fundamental = fundamentalDB[kode];
         
-        if (!fundamental && harga === 0) {
-            throw new Error('Saham tidak ditemukan di database dan Yahoo Finance');
+        if (!fundamental && !yahooSuccess) {
+            throw new Error('Saham tidak ditemukan di database dan Yahoo Finance tidak bisa diakses.\n\nCoba saham lain seperti: BBRI, TLKM, ASII, BBCA, UNVR, BMRI, PGAS, INDF, KLBF, PTBA');
         }
         
         // Gunakan nama dari Yahoo kalau ada, kalau tidak dari database
@@ -280,7 +259,7 @@ const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
         const hargaEl = document.getElementById('harga');
         if (harga > 0) {
             const arrow = change >= 0 ? '📈' : '📉';
-            hargaEl.textContent = `Rp ${harga.toLocaleString('id-ID')} ${arrow} ${change >= 0 ? '+' : ''}${change.toFixed(0)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
+            hargaEl.innerHTML = `Rp ${harga.toLocaleString('id-ID')} ${arrow} ${change >= 0 ? '+' : ''}${change.toFixed(0)} (${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%)`;
             hargaEl.style.color = change >= 0 ? '#28a745' : '#dc3545';
         } else {
             hargaEl.textContent = 'Data tidak tersedia';
@@ -326,14 +305,14 @@ const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
             else if (per < 20) { skor += 13; poinDari.push('PER wajar (+13)'); }
             else if (per < 25) { skor += 8; poinDari.push('PER mahal (+8)'); }
             else { skor += 3; poinDari.push('PER sangat mahal (+3)'); redFlags.push('PER tinggi (>25)'); }
-        } else if (fundamental) {
+        } else if (eps > 0 && harga > 0) {
             // Estimasi PER dari EPS dan harga
             const estimasiPER = harga / eps;
             if (estimasiPER < 10) { skor += 20; poinDari.push('PER estimasi sangat murah (+20)'); }
             else if (estimasiPER < 15) { skor += 17; poinDari.push('PER estimasi murah (+17)'); }
             else if (estimasiPER < 20) { skor += 13; poinDari.push('PER estimasi wajar (+13)'); }
             else if (estimasiPER < 25) { skor += 8; poinDari.push('PER estimasi mahal (+8)'); }
-            else { skor += 3; poinDari.push('PER estimasi sangat mahal (+3)'); redFlags.push('PER tinggi (>25)'); }
+            else { skor += 3; poinDari.push('PER estimasi sangat mahal (+3)'); redFlags.push('PER estimasi tinggi (>25)'); }
         } else {
             poinDari.push('PER tidak tersedia (0)');
         }
@@ -423,22 +402,22 @@ const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
         // Tentukan kategori dan rekomendasi
         if (skor >= 80) {
             scoreBox.className = 'score-box score-bagus';
-            skorKategori.innerHTML = `🟢 FUNDAMENTAL SANGAT BAGUS<br><small>${poinDari.join(' | ')}</small>`;
+            skorKategori.innerHTML = `🟢 FUNDAMENTAL SANGAT BAGUS<br><small style="font-size:11px;">${poinDari.join(' | ')}</small>`;
             rekomendasi.className = 'rekomendasi beli';
             rekomendasi.textContent = '⭐ REKOMENDASI: BELI';
         } else if (skor >= 60) {
             scoreBox.className = 'score-box score-cukup';
-            skorKategori.innerHTML = `🟡 FUNDAMENTAL CUKUP BAGUS<br><small>${poinDari.join(' | ')}</small>`;
+            skorKategori.innerHTML = `🟡 FUNDAMENTAL CUKUP BAGUS<br><small style="font-size:11px;">${poinDari.join(' | ')}</small>`;
             rekomendasi.className = 'rekomendasi tahan';
             rekomendasi.textContent = '⚠️ REKOMENDASI: TAHAN / PERHATIKAN';
         } else if (skor >= 40) {
             scoreBox.className = 'score-box score-buruk';
-            skorKategori.innerHTML = `🟠 FUNDAMENTAL LEMAH<br><small>${poinDari.join(' | ')}</small>`;
+            skorKategori.innerHTML = `🟠 FUNDAMENTAL LEMAH<br><small style="font-size:11px;">${poinDari.join(' | ')}</small>`;
             rekomendasi.className = 'rekomendasi jual';
             rekomendasi.textContent = '❌ REKOMENDASI: JUAL / HINDARI';
         } else {
             scoreBox.className = 'score-box score-buruk';
-            skorKategori.innerHTML = `🔴 FUNDAMENTAL SANGAT LEMAH<br><small>${poinDari.join(' | ')}</small>`;
+            skorKategori.innerHTML = `🔴 FUNDAMENTAL SANGAT LEMAH<br><small style="font-size:11px;">${poinDari.join(' | ')}</small>`;
             rekomendasi.className = 'rekomendasi jual';
             rekomendasi.textContent = '🚨 REKOMENDASI: JUAL SEGERA / HINDARI';
         }
@@ -460,7 +439,7 @@ const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
         console.error('Error:', error);
         loading.style.display = 'none';
         
-        alert(`❌ Gagal mengambil data!\n\nError: ${error.message}\n\nCoba saham lain atau periksa koneksi internet.`);
+        alert(`❌ Gagal mengambil data!\n\n${error.message}\n\nCoba refresh halaman atau periksa koneksi internet.`);
     }
 }
 
