@@ -198,13 +198,36 @@ async function analisaSaham() {
         let dividendYield = 0;
         let namaYahoo = "";
         
-        try {
-           // Gunakan CORS proxy (gratis)
-const proxyUrl = "https://api.allorigins.win/get?url=";
-const yahooUrl = encodeURIComponent(
-    `${YAHOO_QUOTE}?symbols=${ticker}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,trailingPE,priceToBook,marketCap,dividendYield,longName,shortName`
-);
-
+                try {
+            // Gunakan CORS proxy
+            const proxyUrl = "https://api.allorigins.win/get?url=";
+            const yahooUrl = encodeURIComponent(
+                `${YAHOO_QUOTE}?symbols=${ticker}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,trailingPE,priceToBook,marketCap,dividendYield,longName,shortName`
+            );
+            
+            const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
+            
+            if (quoteResponse.ok) {
+                const proxyData = await quoteResponse.json();
+                const quoteData = JSON.parse(proxyData.contents);
+                console.log('Yahoo Quote (via proxy):', quoteData);
+                
+                if (quoteData.quoteResponse && quoteData.quoteResponse.result && quoteData.quoteResponse.result.length > 0) {
+                    const result = quoteData.quoteResponse.result[0];
+                    
+                    harga = result.regularMarketPrice || 0;
+                    change = result.regularMarketChange || 0;
+                    changePercent = result.regularMarketChangePercent || 0;
+                    per = result.trailingPE || 0;
+                    pbv = result.priceToBook || 0;
+                    marketCap = result.marketCap || 0;
+                    dividendYield = result.dividendYield || 0;
+                    namaYahoo = result.longName || result.shortName || kode;
+                }
+            }
+        } catch (e) {
+            console.log('Yahoo Finance error:', e);
+        }
 const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
             
             if (quoteResponse.ok) {
