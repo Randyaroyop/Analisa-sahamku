@@ -199,10 +199,13 @@ async function analisaSaham() {
         let namaYahoo = "";
         
         try {
-            // Ambil quote data
-            const quoteResponse = await fetch(
-                `${YAHOO_QUOTE}?symbols=${ticker}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,trailingPE,priceToBook,marketCap,dividendYield,longName,shortName`
-            );
+           // Gunakan CORS proxy (gratis)
+const proxyUrl = "https://api.allorigins.win/get?url=";
+const yahooUrl = encodeURIComponent(
+    `${YAHOO_QUOTE}?symbols=${ticker}&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,trailingPE,priceToBook,marketCap,dividendYield,longName,shortName`
+);
+
+const quoteResponse = await fetch(`${proxyUrl}${yahooUrl}`);
             
             if (quoteResponse.ok) {
                 const quoteData = await quoteResponse.json();
